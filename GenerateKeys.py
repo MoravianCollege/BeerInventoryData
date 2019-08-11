@@ -1,29 +1,33 @@
 # Project: Beer Analysis
 # Author: Jonah Beers
 
+"""
+This script creates dictionaries for the names, sizes, and categories.
+The results are saved into csv files in the Keys folder.
+
+Some files contain incomplete lines, possibly with NULL characters.
+See inline comment below for a discussion of how this is handled.
+"""
+
 import csv
 from pathlib import Path
 import logging
 
-# Open files/directory path
 pathlist = Path("./Files").glob('**/*.csv')
 n = open('./Keys/names.csv', mode='w+')
 s = open('./Keys/sizes.csv', mode='w+')
 c = open('./Keys/categories.csv', mode='w+')
 
-# Create dicts for name, size, and category
 names = {}
 sizes = {}
 categories = {}
 
-# Create IDs for name, size, and category
 nameID = 1
 sizeID = 1
 categoryID = 1
 
 logging.basicConfig(filename='key_gen.log',level=logging.DEBUG)
 
-# Loop through file and search for unique names, sizes, and categories
 for path in pathlist:
     with open(path, newline='') as f:
         reader = csv.reader(f)
@@ -70,7 +74,6 @@ for path in pathlist:
                 break
 
 
-# Close files
 n.close()
 s.close()
 c.close()
