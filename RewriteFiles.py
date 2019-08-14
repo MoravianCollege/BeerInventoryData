@@ -13,11 +13,6 @@ class Converter:
         self.sizes = {}
         self.categories = {}
 
-    def convert(self, filename):
-        # Open files (only works for reading one file)
-        directory = './Files/'
-        destination = './NewFiles/'
-
         namesFile = './Keys/names.csv'
         sizesFile = './Keys/sizes.csv'
         categoriesFile = './Keys/categories.csv'
@@ -41,39 +36,51 @@ class Converter:
                 category = row[1].strip()
                 self.categories[category] = id
 
+        namesFile.close()
+        sizesFile.close()
+        categoriesFile.close()
+
+    def convert(self, filename):
+        directory = './Files/'
+        destination = './NewFiles/'
+
         # Loop through file and search for unique names, sizes, and categories
         with open(directory + filename, newline='') as f:
             newFile = open(destination + filename, mode='w')
             reader = csv.reader(f)
             trash = next(reader)
-            for row in reader:
-                name = row[0].strip()
-                size = row[1].strip()
-                category = row[2].strip()
-                quantity_available = row[3].strip()
-                retail = row[4].strip()
-                case_retail = row[5].strip()
-                case_pack = row[6].strip()
-                timestamp = row[7].strip()
 
-                # Reassign name, size and category with ID
-                nameID = self.names[name]
-                categoryID = self.categories[category]
-                sizeID = self.convert_size(size)
+            while True:
+                try:
+                    row = next(reader)
+                    name = row[0].strip()
+                    size = row[1].strip()
+                    category = row[2].strip()
+                    quantity_available = row[3].strip()
+                    retail = row[4].strip()
+                    case_retail = row[5].strip()
+                    case_pack = row[6].strip()
+                    timestamp = row[7].strip()
 
-                datetime_str = self.convert_timestamp(timestamp)
+                    # Reassign name, size and category with ID
+                    nameID = self.names[name]
+                    categoryID = self.categories[category]
+                    sizeID = self.convert_size(size)
 
-                # Write to new file
-                newFile.write(nameID + ',' + sizeID + ',' + categoryID + ',' + quantity_available + ',' +
-                              retail + ',' + case_retail + ',' + case_pack + ',' + str(datetime_str) + '\n')
+                    datetime_str = self.convert_timestamp(timestamp)
+
+                    # Write to new file
+                    newFile.write(nameID + ',' + sizeID + ',' + categoryID + ',' + quantity_available + ',' +
+                                  retail + ',' + case_retail + ',' + case_pack + ',' + str(datetime_str) + '\n')
+                except IndexError:
+                    pass
+                except csv.Error:
+                    pass
+                except StopIteration:
+                    break
+
         newFile.close()
-
-        # Close files
         f.close()
-        namesFile.close()
-        sizesFile.close()
-        categoriesFile.close()
-
 
     def convert_size(self, size):
         if size == "1/2 KEG ($20 DEP)":
