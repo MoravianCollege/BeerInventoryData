@@ -7,7 +7,7 @@ class KeyMap:
     def __init__(self, table):
         self.connect(table)
         self.key_map = self.key_map_db.read_map()
-        self.next_id = 1
+        self.next_id = max(self.key_map.values(), default=0) + 1
 
     def connect(self, table):
         self.key_map_db = KeyMapDatabase(table)
