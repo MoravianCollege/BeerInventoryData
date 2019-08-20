@@ -6,18 +6,30 @@ import os
 
 
 class DBSetup:
+    """
+    Methods to remove / create tables
+
+    This script may be run directly to remove existing tables and re-create new, empty tables.
+    """
 
     def __init__(self, host, user, password, dbname):
         self.conn = psycopg2.connect(dbname=dbname, host=host, user=user, password=password)
         self.cur = self.conn.cursor()
 
     def remove_tables_if_present(self):
+        """
+        Drop inventory, products, sizes, and categories (if they exist)
+        :return: None
+        """
         self.cur.execute('DROP TABLE IF EXISTS inventory;')
         self.cur.execute('DROP TABLE IF EXISTS products;')
         self.cur.execute('DROP TABLE IF EXISTS sizes;')
         self.cur.execute('DROP TABLE IF EXISTS categories;')
 
     def create_tables(self):
+        """"
+        Create the producdts, sizes, categories, and inventory tables.
+        """
         create_products = """CREATE TABLE products (
                             product_id SERIAL PRIMARY KEY,
                             tanczos_name text
@@ -56,6 +68,10 @@ class DBSetup:
         self.cur.execute(create_inventory)
 
     def commit(self):
+        """
+        Commit changes and close the connection
+        :return:
+        """
         self.conn.commit()
         self.cur.close()
         self.conn.close()
@@ -67,9 +83,9 @@ if __name__ == '__main__':
     host = os.getenv('DB_HOST')
     user = os.getenv('DB_USER')
     password = os.getenv('DB_PASSWORD')
-    dbname = os.getenv('DB_NAME')
+    database_name = os.getenv('DB_NAME')
 
-    dbs = DBSetup(host, user, password, dbname)
+    dbs = DBSetup(host, user, password, database_name)
 
     dbs.remove_tables_if_present()
     dbs.create_tables()

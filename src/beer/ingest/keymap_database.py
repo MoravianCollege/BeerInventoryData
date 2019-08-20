@@ -5,6 +5,9 @@ import os
 
 
 class KeyMapDatabase:
+    """
+    Interface between the database key-map tables (products, sizes, and categories).
+    """
 
     def __init__(self, table):
         dotenv.load_dotenv()
@@ -19,6 +22,10 @@ class KeyMapDatabase:
         self.table = table
 
     def read_map(self):
+        """
+        Read the current values in the key map
+        :return: a dict that maps strings to integers
+        """
         self.cur.execute('SELECT * FROM {};'.format(self.table))
 
         products = {}
@@ -36,10 +43,3 @@ class KeyMapDatabase:
         """
         self.cur.execute('INSERT INTO {} VALUES (%s, %s);'.format(self.table), (id, product))
         self.conn.commit()
-
-
-if __name__ == '__main__':
-    kmd = KeyMapDatabase('categories')
-
-    kmd.add('junk', 55)
-    print(kmd.read_map())
