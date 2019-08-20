@@ -45,7 +45,8 @@ for path in pathlist:
             try:
                 # next can throw the csv.Error
                 row = next(reader)
-                name = row[0].strip()
+                # remove commas
+                name = row[0].strip().replace(',', '')
                 size = row[1].strip()
                 category = row[2].strip()
                 quantity_available = row[3].strip()
@@ -56,15 +57,15 @@ for path in pathlist:
 
                 if name not in names:
                     names[name] = nameID
-                    n.write('"' + str(nameID) + '","' + name + '"' + '\n')
+                    n.write(str(nameID) + ',"' + name + '"' + '\n')
                     nameID += 1
                 if size not in sizes:
                     sizes[size] = sizeID
-                    s.write('"' + str(sizeID) + '","' + size + '"' + '\n')
+                    s.write(str(sizeID) + ',"' + size + '"' + '\n')
                     sizeID += 1
                 if category not in categories:
                     categories[category] = categoryID
-                    c.write('"' + str(categoryID) + '","' + category + '"' + '\n')
+                    c.write(str(categoryID) + ',"' + category + '"' + '\n')
                     categoryID += 1
             except IndexError:
                 logging.warning('IndexError in {}'.format(path))
