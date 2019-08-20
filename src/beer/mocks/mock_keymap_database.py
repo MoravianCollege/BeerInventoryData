@@ -1,5 +1,5 @@
 
-class MockProductDatabase:
+class MockKeyMapDatabase:
 
     def __init__(self, products):
         self.products = products

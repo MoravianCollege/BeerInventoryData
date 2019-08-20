@@ -1,10 +1,10 @@
 
 from beer.ingest.keymap import KeyMap
-from beer.mocks.mock_keymap_database import MockProductDatabase
+from beer.mocks.mock_keymap_database import MockKeyMapDatabase
 
 
 def empty_connect(self, table):
-    self.key_map_db = MockProductDatabase({})
+    self.key_map_db = MockKeyMapDatabase({})
 
 
 def test_get_new_products(mocker):
@@ -15,7 +15,7 @@ def test_get_new_products(mocker):
 
 
 def populated_connect(self, table):
-    self.key_map_db = MockProductDatabase({'grog': 1, 'beer': 2})
+    self.key_map_db = MockKeyMapDatabase({'grog': 1, 'beer': 2})
 
 
 def test_prexisting_products(mocker):
