@@ -55,23 +55,6 @@ class DBSetup:
         self.cur.execute(create_categories)
         self.cur.execute(create_inventory)
 
-    def init_products(self, filename):
-        with open(filename) as f:
-            self.cur.copy_from(f, 'products', sep=',')
-
-    def init_sizes(self, filename):
-        with open(filename) as f:
-            self.cur.copy_from(f, 'sizes', sep=',')
-
-    def init_categories(self, filename):
-        with open(filename) as f:
-            self.cur.copy_from(f, 'categories', sep=',')
-
-    def init_inventory(self, filename):
-        columns = ('product_id', 'size_id', 'category_id', 'quantity', 'retail', 'case_retail', 'case_pack,timestamp')
-        with open(filename) as f:
-            self.cur.copy_from(f, 'inventory', sep=',', columns=columns)
-
     def commit(self):
         self.conn.commit()
         self.cur.close()
@@ -90,17 +73,4 @@ if __name__ == '__main__':
 
     dbs.remove_tables_if_present()
     dbs.create_tables()
-    dbs.init_products('Keys/names.csv')
-    dbs.init_sizes('Keys/sizes.csv')
-    dbs.init_categories('Keys/categories.csv')
-
-    inventory_files = os.listdir('NewFiles')
-
-    count = 0
-    total = len(inventory_files)
-    for inventory_file in inventory_files:
-        count += 1
-        print('{}/{} ({}) {}'.format(count, total, count/total, inventory_file))
-        dbs.init_inventory('NewFiles/' + inventory_file)
-
     dbs.commit()
