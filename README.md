@@ -13,14 +13,6 @@
   DB_NAME=beer
   ```
 
-## Data Wrangling 
-
-There are currently 3 scripts: 
-
-- **GenerateKeys** will loop through every beer data file and create key files for unique names, sizes and categories.
-- **UpdateKeys** creates another file for sizes that don't include information such as deposites (but this script is not used now).
-- **RewriteFiles** loops through every beer data file and will convert everything to a numeric value using the key files and epoch time converter, then rewrites to new files.
-
 
 ## Create Database and User
 
@@ -45,9 +37,16 @@ If configured properly, the `verify_connection.py` script should produce output 
 
 ## Create and Populate Tables
 
-The code in `db_setup.py` will:
+The code in `src/beer/ingest/db_setup.py` will:
 
 * Delete `inventory`, `products`, `sizes`, and `categories` tables, if present
 * Create the four tables mentioned above
-* Populate `products`, 'sizes', and 'categories' using the files created by `GenerateKeys.py`
-* Populate `inventory` from data in the files created by `RewriteFiles.py`
+
+
+The code in `src/beer/ingest/ingest.py` will:
+
+* Require a folder name as its parameter.  This folder should contain all the CSV files.
+* Read each file and:
+  * Add entries to `producdts`, `sizes` and `categories`, whenever a new value is found
+  * Convert the name, size, and category to the values in the corresponding tables
+  * For each row in the file, add a row to the `inventory` table
