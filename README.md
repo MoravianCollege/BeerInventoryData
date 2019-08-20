@@ -4,6 +4,7 @@
 
 * Create a virtual environment named `.venv`
 * `pip install -r requirements.txt`
+* `pip install -e .` to make the beer package visible and editable
 * Create a file `.env` in the root of the project with the form:
 
   ```
