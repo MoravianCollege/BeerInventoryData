@@ -9,7 +9,7 @@ def test_get_new_products():
     assert p.get_value('grog') == 2
 
 
-def test_prexisting_products():
+def test_pre_existing_products():
     p = KeyMap(MockKeyMapDatabase({'grog': 1, 'beer': 2}))
     # grog is 1, beer is 2
     assert p.get_value('beer') == 2
