@@ -5,3 +5,5 @@ Files/
 Keys/
 NewFiles/
 *.log
+.env
+    
