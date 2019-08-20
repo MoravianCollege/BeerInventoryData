@@ -1,7 +1,6 @@
 
 from beer.ingest.keymap import KeyMap
 from beer.mocks.mock_keymap_database import MockProductDatabase
-from pytest import fixture
 
 
 def empty_connect(self, table):
@@ -22,6 +21,6 @@ def populated_connect(self, table):
 def test_prexisting_products(mocker):
     mocker.patch.object(KeyMap, 'connect', populated_connect)
     p = KeyMap('products')
-    # grog is 1...
+    # grog is 1, beer is 2
     assert p.get_value('beer') == 2
     assert p.get_value('food') == 3
