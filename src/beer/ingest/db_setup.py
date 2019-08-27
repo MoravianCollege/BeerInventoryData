@@ -6,18 +6,30 @@ import os
 
 
 class DBSetup:
+    """
+    Methods to remove / create tables
+
+    This script may be run directly to remove existing tables and re-create new, empty tables.
+    """
 
     def __init__(self, host, user, password, dbname):
         self.conn = psycopg2.connect(dbname=dbname, host=host, user=user, password=password)
         self.cur = self.conn.cursor()
 
     def remove_tables_if_present(self):
+        """
+        Drop inventory, products, sizes, and categories (if they exist)
+        :return: None
+        """
         self.cur.execute('DROP TABLE IF EXISTS inventory;')
         self.cur.execute('DROP TABLE IF EXISTS products;')
         self.cur.execute('DROP TABLE IF EXISTS sizes;')
         self.cur.execute('DROP TABLE IF EXISTS categories;')
 
     def create_tables(self):
+        """"
+        Create the producdts, sizes, categories, and inventory tables.
+        """
         create_products = """CREATE TABLE products (
                             product_id SERIAL PRIMARY KEY,
                             tanczos_name text
@@ -55,24 +67,11 @@ class DBSetup:
         self.cur.execute(create_categories)
         self.cur.execute(create_inventory)
 
-    def init_products(self, filename):
-        with open(filename) as f:
-            self.cur.copy_from(f, 'products', sep=',')
-
-    def init_sizes(self, filename):
-        with open(filename) as f:
-            self.cur.copy_from(f, 'sizes', sep=',')
-
-    def init_categories(self, filename):
-        with open(filename) as f:
-            self.cur.copy_from(f, 'categories', sep=',')
-
-    def init_inventory(self, filename):
-        columns = ('product_id', 'size_id', 'category_id', 'quantity', 'retail', 'case_retail', 'case_pack,timestamp')
-        with open(filename) as f:
-            self.cur.copy_from(f, 'inventory', sep=',', columns=columns)
-
     def commit(self):
+        """
+        Commit changes and close the connection
+        :return:
+        """
         self.conn.commit()
         self.cur.close()
         self.conn.close()
@@ -84,23 +83,10 @@ if __name__ == '__main__':
     host = os.getenv('DB_HOST')
     user = os.getenv('DB_USER')
     password = os.getenv('DB_PASSWORD')
-    dbname = os.getenv('DB_NAME')
+    database_name = os.getenv('DB_NAME')
 
-    dbs = DBSetup(host, user, password, dbname)
+    dbs = DBSetup(host, user, password, database_name)
 
     dbs.remove_tables_if_present()
     dbs.create_tables()
-    dbs.init_products('Keys/names.csv')
-    dbs.init_sizes('Keys/sizes.csv')
-    dbs.init_categories('Keys/categories.csv')
-
-    inventory_files = os.listdir('NewFiles')
-
-    count = 0
-    total = len(inventory_files)
-    for inventory_file in inventory_files:
-        count += 1
-        print('{}/{} ({}) {}'.format(count, total, count/total, inventory_file))
-        dbs.init_inventory('NewFiles/' + inventory_file)
-
     dbs.commit()
