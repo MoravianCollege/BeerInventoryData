@@ -6,6 +6,7 @@ from beer.ingest.transform import Transform
 from beer.ingest.keymap import KeyMap
 from beer.ingest.keymap_database import KeyMapDatabase
 from beer.ingest.inventory_writer import InventoryWriter
+from beer.ingest.timestamp_database import TimestampDatabase
 
 
 class Ingest:
@@ -28,10 +29,11 @@ class Ingest:
         categories = KeyMap(KeyMapDatabase('categories'))
 
         self.transform = Transform(products, sizes, categories)
+        self.timestamp_db = TimestampDatabase()
 
     def ingest(self, filename):
         """
-        Convert a file and make necessary additions to inventory, products, sizes, and categories.
+        Convert a file and make necessary additions to inventory, products, sizes, categories, and timestamps.
         :param filename: the file to process
         :return: None
         """
@@ -68,6 +70,11 @@ class Ingest:
         # It is more efficient to write in bulk, so we do it for each file.
         # This will commit the changes and close the connection
         writer.write()
+
+        # The last value is the timestamp.  Every row has the same value, so we
+        # can use the last one
+        timestamp = values[-1]
+        self.timestamp_db.add(timestamp)
 
 
 if __name__ == '__main__':

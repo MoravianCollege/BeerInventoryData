@@ -40,14 +40,15 @@ If configured properly, the `verify_connection.py` script should produce output 
 
 The code in `src/beer/ingest/db_setup.py` will:
 
-* Delete `inventory`, `products`, `sizes`, and `categories` tables, if present
-* Create the four tables mentioned above
+* Delete `inventory`, `products`, `sizes`, `categories`, and `timestamps' tables, if present
+* Create the tables mentioned above
 
 
 The code in `src/beer/ingest/ingest.py` will:
 
 * Require a folder name as its parameter.  This folder should contain all the CSV files.
 * Read each file and:
-  * Add entries to `producdts`, `sizes` and `categories`, whenever a new value is found
+  * Add entries to `products`, `sizes` and `categories`, whenever a new value is found
+  * Add an entry to `timestamps`
   * Convert the name, size, and category to the values in the corresponding tables
   * For each row in the file, add a row to the `inventory` table

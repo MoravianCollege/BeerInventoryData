@@ -25,6 +25,7 @@ class DBSetup:
         self.cur.execute('DROP TABLE IF EXISTS products;')
         self.cur.execute('DROP TABLE IF EXISTS sizes;')
         self.cur.execute('DROP TABLE IF EXISTS categories;')
+        self.cur.execute('DROP TABLE IF EXISTS timestamps')
 
     def create_tables(self):
         """"
@@ -42,6 +43,11 @@ class DBSetup:
                           );
                        """
 
+        create_timestamps = """CREATE TABLE timestamps (
+                               timestamp TIMESTAMP PRIMARY KEY
+                               );
+                            """
+
         create_categories = """CREATE TABLE categories (
                                category_id SERIAL PRIMARY KEY,
                                tanczos_category text
@@ -58,13 +64,14 @@ class DBSetup:
                               retail MONEY,
                               case_retail MONEY,
                               case_pack INTEGER,
-                              timestamp TIMESTAMP
+                              timestamp TIMESTAMP REFERENCES timestamps(timestamp)
                               );
                             """
 
         self.cur.execute(create_products)
         self.cur.execute(create_sizes)
         self.cur.execute(create_categories)
+        self.cur.execute(create_timestamps)
         self.cur.execute(create_inventory)
 
     def commit(self):
