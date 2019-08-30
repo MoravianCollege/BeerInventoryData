@@ -25,5 +25,5 @@ class TimestampDatabase:
         :return: None
         :except: psycopg2.errors.UniqueViolation if the timestamp already exists
         """
-        self.cur.execute('INSERT INTO timestamps VALUES ({});'.format(timestamp))
+        self.cur.execute('INSERT INTO timestamps VALUES ("{}");'.format(timestamp))
         self.conn.commit()
