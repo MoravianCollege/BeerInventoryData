@@ -67,14 +67,17 @@ class Ingest:
                 except StopIteration:
                     break
 
+        # The last value is the timestamp.  Every row has the same value, so we
+        # can use the last one
+        # We have to write this before the inventory data because inventory(timestamp)
+        # depends on timestamps(timestamp).
+        timestamp = values[-1]
+        self.timestamp_db.add(timestamp)
+
         # It is more efficient to write in bulk, so we do it for each file.
         # This will commit the changes and close the connection
         writer.write()
 
-        # The last value is the timestamp.  Every row has the same value, so we
-        # can use the last one
-        timestamp = values[-1]
-        self.timestamp_db.add(timestamp)
 
 
 if __name__ == '__main__':
