@@ -64,7 +64,8 @@ class DBSetup:
                               retail MONEY,
                               case_retail MONEY,
                               case_pack INTEGER,
-                              timestamp TIMESTAMP REFERENCES timestamps(timestamp)
+                              timestamp TIMESTAMP REFERENCES timestamps(timestamp),
+                              UNIQUE(product_id, category_id, size_id, case_pack, timestamp)
                               );
                             """
 
