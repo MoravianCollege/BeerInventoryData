@@ -1,9 +1,6 @@
 .idea/
 .venv/
 .DS_Store
-Files/
-Keys/
-NewFiles/
 *.log
 .env
 __pycache__/
