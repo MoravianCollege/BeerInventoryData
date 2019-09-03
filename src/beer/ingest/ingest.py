@@ -5,11 +5,6 @@ from beer.ingest.keymap import KeyMap
 from beer.ingest.keymap_database import KeyMapDatabase
 from beer.ingest.timestamp_database import TimestampDatabase
 import pandas as pd
-import dotenv
-import os
-import sqlalchemy
-import time
-import io
 
 
 import psycopg2
@@ -25,7 +20,7 @@ class Ingest:
     necessary additions to products, sizes, and categories).
     """
 
-    def __init__(self):
+    def __init__(self, conn):
         logging.basicConfig(filename='ingest.log', level=logging.DEBUG)
 
         # Maps to look up (or add new) integer values for these fields
@@ -35,12 +30,7 @@ class Ingest:
 
         self.timestamp_db = TimestampDatabase()
 
-        host = os.getenv('DB_HOST')
-        user = os.getenv('DB_USER')
-        password = os.getenv('DB_PASSWORD')
-        database_name = os.getenv('DB_NAME')
-
-        self.conn = psycopg2.connect(dbname=database_name, host=host, user=user, password=password)
+        self.conn = conn
         self.cur = self.conn.cursor()
 
     def ingest(self, filename):
@@ -112,8 +102,10 @@ class Ingest:
 
 if __name__ == '__main__':
 
-    import os
     import sys
+    import dotenv
+    import os
+    import io
 
     if len(sys.argv) != 2:
         print('Provide path to CSV files')
@@ -121,7 +113,15 @@ if __name__ == '__main__':
 
     path = sys.argv[1]
 
-    i = Ingest()
+    dotenv.load_dotenv()
+    host = os.getenv('DB_HOST')
+    user = os.getenv('DB_USER')
+    password = os.getenv('DB_PASSWORD')
+    database_name = os.getenv('DB_NAME')
+
+    conn = psycopg2.connect(dbname=database_name, host=host, user=user, password=password)
+
+    i = Ingest(conn)
 
     files = sorted(os.listdir(path))
     count = 0
