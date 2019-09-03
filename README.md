@@ -1,5 +1,9 @@
 # BeerInventoryData
 
+## Data
+
+The CSV files should be stored in a single directory *NOT* in the repo directory.
+
 ## Developer Setup
 
 * Create a virtual environment named `.venv`
