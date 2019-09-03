@@ -50,7 +50,25 @@ class Ingest:
         :return: None
         """
         data = pd.read_csv(filename)
+
+        # if the file contains any incomplete lines, drop them
         data = data.dropna()
+
+        # Remove fractional part from timestamp
+        data['timestamp'] = data['timestamp'].apply(lambda x: x.split('.')[0])
+
+        # The last value is the timestamp.  Every row has the same value, so we
+        # can use the last one
+        # We have to write this before the inventory data because inventory(timestamp)
+        # depends on timestamps(timestamp).
+        # All the timestamps in a file are the same
+        timestamp = data['timestamp'].unique()[0]
+
+        if self.timestamp_db.contains(timestamp):
+            return
+
+        # Adding the timestamp indicates the the file has been processed
+        self.timestamp_db.add(timestamp)
 
         # If there is a bad line in the file, the type of 'Case Pack' will end up
         # as a float, and writing to the DB will fail.
@@ -61,9 +79,6 @@ class Ingest:
         data['Name'] = data['Name'].apply(lambda x: self.products.get_value(x.replace(',', '')))
         data['size'] = data['size'].apply(lambda x: self.sizes.get_value(x))
         data['Category'] = data['Category'].apply(lambda x: self.categories.get_value(x))
-
-        # Remove fractional part from timestamp
-        data['timestamp'] = data['timestamp'].apply(lambda x: x.split('.')[0])
 
         # Rename columns to match database columns
         name_map = {'Name': 'product_id',
@@ -83,14 +98,6 @@ class Ingest:
         # Aggregate duplicates by adding quantities and taking maximum of retail and case_retail
         data = data.groupby(['product_id', 'category_id', 'size_id', 'case_pack', 'timestamp'], as_index=False).agg(
             {'quantity': 'sum', 'retail': 'max', 'case_retail': 'max'})
-
-        # The last value is the timestamp.  Every row has the same value, so we
-        # can use the last one
-        # We have to write this before the inventory data because inventory(timestamp)
-        # depends on timestamps(timestamp).
-        # All the timestamps in a file are the same
-        timestamp = data['timestamp'].unique()[0]
-        self.timestamp_db.add(timestamp)
 
         # Convert dataframe to csv as a string
         output = io.StringIO()
