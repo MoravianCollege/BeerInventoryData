@@ -62,8 +62,8 @@ class DBSetup:
                               size_id INTEGER REFERENCES sizes(size_id),
                               category_id INTEGER REFERENCES categories(category_id),
                               quantity NUMERIC(8,3),
-                              retail MONEY,
-                              case_retail MONEY,
+                              retail NUMERIC(8,4),
+                              case_retail NUMERIC(8,4),
                               case_pack INTEGER,
                               timestamp TIMESTAMP REFERENCES timestamps(timestamp),
                               UNIQUE(product_id, category_id, size_id, case_pack, timestamp)
@@ -81,8 +81,8 @@ class DBSetup:
                                  case_pack INTEGER,
                                  transaction_quantity NUMERIC(8,3),
                                  timestamp TIMESTAMP REFERENCES timestamps(timestamp),
-                                 retail MONEY,
-                                 case_retail MONEY
+                                 retail NUMERIC(8,4),
+                                 case_retail NUMERIC(8,4)
                                  );
                               """
         self.cur.execute(create_products)
