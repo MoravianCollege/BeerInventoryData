@@ -88,9 +88,10 @@ class DBSetup:
         self.cur.execute(create_products)
         self.cur.execute(create_sizes)
         self.cur.execute(create_categories)
-        self.cur.execute(create_inventory)
         self.cur.execute(create_timestamps)
-
+        self.cur.execute(create_inventory)
+        self.cur.execute(create_transactions)
+        
     def commit(self):
         """
         Commit changes and close the connection
