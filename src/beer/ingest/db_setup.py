@@ -21,8 +21,8 @@ class DBSetup:
         Drop inventory, products, sizes, and categories (if they exist)
         :return: None
         """
-        self.cur.execute('DROP TABLE IF EXISTS inventory;')
         self.cur.execute('DROP TABLE IF EXISTS transactions;')
+        self.cur.execute('DROP TABLE IF EXISTS inventory;')
         self.cur.execute('DROP TABLE IF EXISTS products;')
         self.cur.execute('DROP TABLE IF EXISTS sizes;')
         self.cur.execute('DROP TABLE IF EXISTS categories;')
@@ -88,8 +88,8 @@ class DBSetup:
         self.cur.execute(create_products)
         self.cur.execute(create_sizes)
         self.cur.execute(create_categories)
-        self.cur.execute(create_timestamps)
         self.cur.execute(create_inventory)
+        self.cur.execute(create_timestamps)
 
     def commit(self):
         """
