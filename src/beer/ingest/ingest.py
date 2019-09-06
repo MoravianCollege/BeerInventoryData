@@ -5,7 +5,7 @@ from beer.ingest.keymap import KeyMap
 from beer.ingest.keymap_database import KeyMapDatabase
 from beer.ingest.timestamp_database import TimestampDatabase
 import pandas as pd
-
+import io
 
 import psycopg2
 
@@ -20,15 +20,15 @@ class Ingest:
     necessary additions to products, sizes, and categories).
     """
 
-    def __init__(self, conn):
+    def __init__(self, conn, products, sizes, categories, timestamps):
         logging.basicConfig(filename='ingest.log', level=logging.DEBUG)
 
         # Maps to look up (or add new) integer values for these fields
-        self.products = KeyMap(KeyMapDatabase('products'))
-        self.sizes = KeyMap(KeyMapDatabase('sizes'))
-        self.categories = KeyMap(KeyMapDatabase('categories'))
+        self.products = products
+        self.sizes = sizes
+        self.categories = categories
 
-        self.timestamp_db = TimestampDatabase()
+        self.timestamp_db = timestamps
 
         self.conn = conn
         self.cur = self.conn.cursor()
@@ -105,7 +105,6 @@ if __name__ == '__main__':
     import sys
     import dotenv
     import os
-    import io
 
     if len(sys.argv) != 2:
         print('Provide path to CSV files')
@@ -121,7 +120,14 @@ if __name__ == '__main__':
 
     conn = psycopg2.connect(dbname=database_name, host=host, user=user, password=password)
 
-    i = Ingest(conn)
+    # Maps to look up (or add new) integer values for these fields
+    products = KeyMap(KeyMapDatabase('products'))
+    sizes = KeyMap(KeyMapDatabase('sizes'))
+    categories = KeyMap(KeyMapDatabase('categories'))
+
+    timestamps = TimestampDatabase()
+
+    i = Ingest(conn, products, sizes, categories, timestamps)
 
     files = sorted(os.listdir(path))
     count = 0
