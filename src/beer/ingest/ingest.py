@@ -3,7 +3,6 @@
 from beer.ingest.keymap import KeyMap
 from beer.ingest.timestamp_database import TimestampDatabase
 from beer.ingest.convert import Converter
-from beer.ingest.transactions import Transactions
 import pandas as pd
 import io
 import psycopg2
@@ -28,7 +27,6 @@ class Ingest:
         self.categories = categories
         self.converter = Converter(products, sizes, categories)
         self.timestamps = timestamps
-        self.transactions = Transactions()
         self.cur = self.conn.cursor()
 
     def ingest(self, filename):
