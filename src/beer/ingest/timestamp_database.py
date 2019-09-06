@@ -9,21 +9,10 @@ class TimestampDatabase:
     Interface to write timestamps to the database
     """
 
-    def __init__(self):
-        dotenv.load_dotenv()
-
-        host = os.getenv('DB_HOST')
-        user = os.getenv('DB_USER')
-        password = os.getenv('DB_PASSWORD')
-        database_name = os.getenv('DB_NAME')
-
-        self.conn = psycopg2.connect(dbname=database_name, host=host, user=user, password=password)
+    def __init__(self, conn):
+        self.conn = conn
         self.cur = self.conn.cursor()
         self.timestamps = set()
-
-        self.cur.execute('SELECT * FROM timestamps');
-        for timestamp, in self.cur.fetchall():
-            self.timestamps.add(str(timestamp))
 
     def add(self, timestamp):
         """

@@ -14,13 +14,14 @@ class MockConnection:
 class MockCursor:
 
     def __init__(self):
-        self.output = None
-        self.table = None
-        self.sep = None
-        self.columns = None
+        self.commands = []
 
     def copy_from(self, output, table, sep, columns):
-        self.output = output
-        self.table = table
-        self.sep = sep
-        self.columns = columns
+        cmd = '{} {} {} {}'.format(output.getvalue(), table, sep, columns)
+        self.commands.append(cmd)
+
+    def execute(self, query, *args):
+        self.commands.append(query + repr(args))
+
+    def reset(self):
+        self.commands = []

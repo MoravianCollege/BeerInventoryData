@@ -1,13 +1,13 @@
 
 
-import logging
 from beer.ingest.keymap import KeyMap
-from beer.ingest.keymap_database import KeyMapDatabase
 from beer.ingest.timestamp_database import TimestampDatabase
+from beer.ingest.convert import Converter
+from beer.ingest.transactions import Transactions
 import pandas as pd
 import io
-
 import psycopg2
+
 
 class Ingest:
     """
@@ -21,16 +21,14 @@ class Ingest:
     """
 
     def __init__(self, conn, products, sizes, categories, timestamps):
-        logging.basicConfig(filename='ingest.log', level=logging.DEBUG)
-
         # Maps to look up (or add new) integer values for these fields
+        self.conn = conn
         self.products = products
         self.sizes = sizes
         self.categories = categories
-
-        self.timestamp_db = timestamps
-
-        self.conn = conn
+        self.converter = Converter(products, sizes, categories)
+        self.timestamps = timestamps
+        self.transactions = Transactions()
         self.cur = self.conn.cursor()
 
     def ingest(self, filename):
@@ -40,62 +38,29 @@ class Ingest:
         :return: None
         """
         data = pd.read_csv(filename)
+        data = self.converter.convert(data)
 
-        # if the file contains any incomplete lines, drop them
-        data = data.dropna()
-
-        # Remove fractional part from timestamp
-        data['timestamp'] = data['timestamp'].apply(lambda x: x.split('.')[0])
-
-        # The last value is the timestamp.  Every row has the same value, so we
-        # can use the last one
         # We have to write this before the inventory data because inventory(timestamp)
         # depends on timestamps(timestamp).
-        # All the timestamps in a file are the same
         timestamp = data['timestamp'].unique()[0]
+        self.timestamps.add(timestamp)
 
-        if self.timestamp_db.contains(timestamp):
-            return
-
-        # Adding the timestamp indicates the the file has been processed
-        self.timestamp_db.add(timestamp)
-
-        # If there is a bad line in the file, the type of 'Case Pack' will end up
-        # as a float, and writing to the DB will fail.
-        data['Case Pack'] = data['Case Pack'].astype(int)
-
-        # Map name, size, and category to integer values
-        # Remove commas from the name and then apply the map
-        data['Name'] = data['Name'].apply(lambda x: self.products.get_value(x.replace(',', '')))
-        data['size'] = data['size'].apply(lambda x: self.sizes.get_value(x))
-        data['Category'] = data['Category'].apply(lambda x: self.categories.get_value(x))
-
-        # Rename columns to match database columns
-        name_map = {'Name': 'product_id',
-                    'size': 'size_id',
-                    'Category': 'category_id',
-                    'Quantity_Available': 'quantity',
-                    'Retail': 'retail',
-                    'Case Retail': 'case_retail',
-                    'Case Pack': 'case_pack'}
-        data = data.rename(columns=name_map)
-
-        # Remove rows that are full duplicates
-        data.drop_duplicates(
-            subset=['product_id', 'category_id', 'size_id', 'case_pack', 'quantity', 'retail', 'case_retail'],
-            inplace=True)
-
-        # Aggregate duplicates by adding quantities and taking maximum of retail and case_retail
-        data = data.groupby(['product_id', 'category_id', 'size_id', 'case_pack', 'timestamp'], as_index=False).agg(
-            {'quantity': 'sum', 'retail': 'max', 'case_retail': 'max'})
+        # We save newly discovered keys for the same reason as the timestamp: inventory
+        # depends on the values
+        self.products.save_new_keys()
+        self.sizes.save_new_keys()
+        self.categories.save_new_keys()
 
         # Convert dataframe to csv as a string
         output = io.StringIO()
         data.to_csv(output, header=False, index=False)
+        # seek to the beginning so copy_from can read it
         output.seek(0)
 
+        # Save the inventory
         # column names are required here because the inventory_id will be auto-filled for each row
-        columns = ('product_id', 'category_id', 'size_id', 'case_pack', 'timestamp ', 'quantity', 'retail', 'case_retail')
+        columns = ('product_id', 'category_id', 'size_id', 'case_pack', 'timestamp ',
+                   'quantity', 'retail', 'case_retail')
         self.cur.copy_from(output, 'inventory', sep=',', columns=columns)
         self.conn.commit()
 
@@ -121,11 +86,10 @@ if __name__ == '__main__':
     conn = psycopg2.connect(dbname=database_name, host=host, user=user, password=password)
 
     # Maps to look up (or add new) integer values for these fields
-    products = KeyMap(KeyMapDatabase('products'))
-    sizes = KeyMap(KeyMapDatabase('sizes'))
-    categories = KeyMap(KeyMapDatabase('categories'))
-
-    timestamps = TimestampDatabase()
+    products = KeyMap(conn, 'products')
+    sizes = KeyMap(conn, 'sizes')
+    categories = KeyMap(conn, 'categories')
+    timestamps = TimestampDatabase(conn)
 
     i = Ingest(conn, products, sizes, categories, timestamps)
 

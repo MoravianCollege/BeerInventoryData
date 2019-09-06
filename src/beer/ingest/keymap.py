@@ -9,20 +9,32 @@ class KeyMap:
     This class abstracts away the underlying database.
     """
     
-    def __init__(self, keymap_db):
-        self.key_map_db = keymap_db
-        self.key_map = self.key_map_db.read_map()
+    def __init__(self, conn, table):
+        self.conn = conn
+        self.table = table
+        self.cur = self.conn.cursor()
+
+        self.key_map = {}
+        self.new_key_map = {}
         self.next_id = max(self.key_map.values(), default=0) + 1
 
-    def get_value(self, key):
+    def get_value(self, name):
         """
         Get the integer value for a value.  If it is not present in the map, a new
         value will be added.
-        :param key: the key to look up
+        :param name: the key to look up
         :return: the integer value
         """
-        if key not in self.key_map:
-            self.key_map[key] = self.next_id
-            self.key_map_db.add(key, self.next_id)
+        if name not in self.key_map:
+            self.key_map[name] = self.next_id
+            self.new_key_map[name] = self.next_id
             self.next_id += 1
-        return self.key_map[key]
+        return self.key_map[name]
+
+    def save_new_keys(self):
+
+        for name, value in self.new_key_map.items():
+            self.cur.execute('INSERT INTO {} VALUES (%s, %s);'.format(self.table), (name, value))
+
+        self.conn.commit()
+        self.new_key_map = {}
