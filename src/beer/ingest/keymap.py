@@ -34,7 +34,7 @@ class KeyMap:
     def save_new_keys(self):
 
         for name, value in self.new_key_map.items():
-            self.cur.execute('INSERT INTO {} VALUES (%s, %s);'.format(self.table), (name, value))
+            self.cur.execute('INSERT INTO {} VALUES (%s, %s);'.format(self.table), (value, name))
 
         self.conn.commit()
         self.new_key_map = {}
