@@ -21,6 +21,7 @@ class DBSetup:
         Drop inventory, products, sizes, and categories (if they exist)
         :return: None
         """
+        self.cur.execute('DROP TABLE IF EXISTS transactions;')
         self.cur.execute('DROP TABLE IF EXISTS inventory;')
         self.cur.execute('DROP TABLE IF EXISTS products;')
         self.cur.execute('DROP TABLE IF EXISTS sizes;')
@@ -61,20 +62,36 @@ class DBSetup:
                               size_id INTEGER REFERENCES sizes(size_id),
                               category_id INTEGER REFERENCES categories(category_id),
                               quantity NUMERIC(8,3),
-                              retail MONEY,
-                              case_retail MONEY,
+                              retail NUMERIC(8,4),
+                              case_retail NUMERIC(8,4),
                               case_pack INTEGER,
                               timestamp TIMESTAMP REFERENCES timestamps(timestamp),
                               UNIQUE(product_id, category_id, size_id, case_pack, timestamp)
                               );
                             """
 
+        # pre_inventory_id may be -1 if new product
+        create_transactions = """CREATE TABLE transactions (
+                                 transaction_id BIGSERIAL PRIMARY KEY,
+                                 pre_inventory_id BIGSERIAL, 
+                                 post_inventory_id BIGSERIAL REFERENCES inventory(inventory_id),
+                                 product_id INTEGER REFERENCES products(product_id),
+                                 category_id INTEGER REFERENCES categories(category_id),
+                                 size_id INTEGER REFERENCES sizes(size_id),
+                                 case_pack INTEGER,
+                                 transaction_quantity NUMERIC(8,3),
+                                 timestamp TIMESTAMP REFERENCES timestamps(timestamp),
+                                 retail NUMERIC(8,4),
+                                 case_retail NUMERIC(8,4)
+                                 );
+                              """
         self.cur.execute(create_products)
         self.cur.execute(create_sizes)
         self.cur.execute(create_categories)
         self.cur.execute(create_timestamps)
         self.cur.execute(create_inventory)
-
+        self.cur.execute(create_transactions)
+        
     def commit(self):
         """
         Commit changes and close the connection
