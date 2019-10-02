@@ -6,6 +6,7 @@ from beer.ingest.size_parser import parse_size
 from beer.ingest.transactions import compute_transactions
 import pandas as pd
 import psycopg2
+from datetime import timedelta
 
 
 class Ingest:
@@ -100,7 +101,7 @@ class Ingest:
         data = data[columns]
 
         # Remove records with zero quantity (negative is kept)
-        return data[data['quantity'] != 0]
+        return data[data['quantity'] != 0].copy().reset_index(drop=True)
 
     def save_tables(self, data):
         # We have to write this before the inventory data because inventory(timestamp)
@@ -126,9 +127,20 @@ class Ingest:
         columns = ['pre_inventory_id', 'post_inventory_id', 'product_id',
                    'transaction_quantity', 'timestamp', 'retail', 'case_retail']
         current_timestamp = data['timestamp'][0]
-        if self.prev_timestamp == None:
+        if self.prev_timestamp is None:
             self.prev_timestamp = current_timestamp;
-            # Return and empty dataframe with the proper columns
+            # Return an empty DataFrame with the proper columns
+            return pd.DataFrame(columns=columns)
+
+        prev_dt = pd.to_datetime(self.prev_timestamp)
+        curr_dt = pd.to_datetime(current_timestamp)
+
+        delta = curr_dt - prev_dt
+        threshold = timedelta(minutes=60)
+
+        if delta > threshold:
+            self.prev_timestamp = current_timestamp;
+            # Return an empty DataFrame with the proper columns
             return pd.DataFrame(columns=columns)
 
         # Get the previous timestamp and the inventory for that timestamp.  We will use them after
