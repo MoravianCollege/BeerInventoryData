@@ -24,49 +24,46 @@ class DBSetup:
         self.cur.execute('DROP TABLE IF EXISTS transactions;')
         self.cur.execute('DROP TABLE IF EXISTS inventory;')
         self.cur.execute('DROP TABLE IF EXISTS products;')
-        self.cur.execute('DROP TABLE IF EXISTS sizes;')
-        self.cur.execute('DROP TABLE IF EXISTS categories;')
+        self.cur.execute('DROP TABLE IF EXISTS names')
         self.cur.execute('DROP TABLE IF EXISTS timestamps')
+        self.cur.execute('DROP TABLE IF EXISTS current_inventory')
 
     def create_tables(self):
         """"
         Create the producdts, sizes, categories, and inventory tables.
         """
-        create_products = """CREATE TABLE products (
-                            product_id SERIAL PRIMARY KEY,
-                            tanczos_name text
-                            );
-                          """
-
-        create_sizes = """CREATE TABLE sizes (
-                          size_id SERIAL PRIMARY KEY,
-                          tanczos_size text
-                          );
-                       """
-
         create_timestamps = """CREATE TABLE timestamps (
                                timestamp TIMESTAMP PRIMARY KEY
                                );
                             """
 
-        create_categories = """CREATE TABLE categories (
-                               category_id SERIAL PRIMARY KEY,
-                               tanczos_category text
-                               );
-                            """
+        create_names = """CREATE TABLE names (
+                            name_id SERIAL PRIMARY KEY,
+                            tanczos_name TEXT
+                            );
+                          """
 
+        create_products = """
+                          CREATE TABLE products (
+                            product_id SERIAL PRIMARY KEY,
+                            name_id SERIAL REFERENCES names(name_id),
+                            container_quantity INTEGER,
+                            quantity_in_case INTEGER,
+                            container_volume TEXT,
+                            container_type TEXT,
+                            tanczos_category TEXT,
+                            date_added TIMESTAMP REFERENCES timestamps(timestamp)
+                            );                            
+                          """
         #  inventory_id is BIGSERIAL because we generate approximately 200 million per year
         create_inventory = """CREATE TABLE inventory (
                               inventory_id BIGSERIAL PRIMARY KEY,
                               product_id INTEGER REFERENCES products(product_id),
-                              size_id INTEGER REFERENCES sizes(size_id),
-                              category_id INTEGER REFERENCES categories(category_id),
                               quantity NUMERIC(8,3),
                               retail NUMERIC(8,4),
                               case_retail NUMERIC(8,4),
-                              case_pack INTEGER,
                               timestamp TIMESTAMP REFERENCES timestamps(timestamp),
-                              UNIQUE(product_id, category_id, size_id, case_pack, timestamp)
+                              UNIQUE(product_id, timestamp)
                               );
                             """
 
@@ -75,22 +72,33 @@ class DBSetup:
                                  transaction_id BIGSERIAL PRIMARY KEY,
                                  pre_inventory_id BIGSERIAL, 
                                  post_inventory_id BIGSERIAL REFERENCES inventory(inventory_id),
-                                 product_id INTEGER REFERENCES products(product_id),
-                                 category_id INTEGER REFERENCES categories(category_id),
-                                 size_id INTEGER REFERENCES sizes(size_id),
-                                 case_pack INTEGER,
+                                 product_id SERIAL REFERENCES products(product_id),
                                  transaction_quantity NUMERIC(8,3),
-                                 timestamp TIMESTAMP REFERENCES timestamps(timestamp),
                                  retail NUMERIC(8,4),
-                                 case_retail NUMERIC(8,4)
+                                 case_retail NUMERIC(8,4),
+                                 timestamp TIMESTAMP REFERENCES timestamps(timestamp)
                                  );
                               """
-        self.cur.execute(create_products)
-        self.cur.execute(create_sizes)
-        self.cur.execute(create_categories)
+
+        create_current_inventory = """
+                                   CREATE TABLE current_inventory (
+                                   name TEXT,
+                                   size TEXT,
+                                   category TEXT,
+                                   quantity NUMERIC(8,3),
+                                   retail NUMERIC(8,4),
+                                   case_retail NUMERIC(8,4),
+                                   case_pack INTEGER,
+                                   timestamp TIMESTAMP
+                                   );                               
+                                """
+
         self.cur.execute(create_timestamps)
+        self.cur.execute(create_names)
+        self.cur.execute(create_products)
         self.cur.execute(create_inventory)
         self.cur.execute(create_transactions)
+        self.cur.execute(create_current_inventory)
         
     def commit(self):
         """
