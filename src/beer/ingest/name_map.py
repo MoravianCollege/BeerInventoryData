@@ -1,21 +1,20 @@
 
-class KeyMap:
+import pandas as pd
+
+class NameMap:
     """
-    Convert strings to integers for a given table.  Used with products, sizes, and categories.
+    Convert strings to integers for a names.
     
     When a value is requested, if it is not present in the map, a new value is automatically
     added to the map.
-    
-    This class abstracts away the underlying database.
     """
     
-    def __init__(self, conn, table):
-        self.conn = conn
-        self.table = table
-        self.cur = self.conn.cursor()
-
-        self.key_map = {}
-        self.new_key_map = {}
+    def __init__(self, current_names):
+        if len(current_names) > 0:
+            self.key_map = dict(zip(current_names['tanczos_name'], current_names['name_id']))
+        else:
+            self.key_map = {}
+        self.new_keys = {}
         self.next_id = max(self.key_map.values(), default=0) + 1
 
     def get_value(self, name):
@@ -27,14 +26,11 @@ class KeyMap:
         """
         if name not in self.key_map:
             self.key_map[name] = self.next_id
-            self.new_key_map[name] = self.next_id
+            self.new_keys[name] = self.next_id
             self.next_id += 1
         return self.key_map[name]
 
-    def save_new_keys(self):
-
-        for name, value in self.new_key_map.items():
-            self.cur.execute('INSERT INTO {} VALUES (%s, %s);'.format(self.table), (value, name))
-
-        self.conn.commit()
-        self.new_key_map = {}
+    def get_new_names(self):
+        data = {'name_id': list(self.new_keys.values()), 'tanczos_name': list(self.new_keys.keys())}
+        self.new_keys = {}
+        return pd.DataFrame(data=data)
