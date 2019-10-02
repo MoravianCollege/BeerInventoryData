@@ -1,37 +1,53 @@
 
-from beer.ingest.keymap import KeyMap
-from beer.mocks.mock_database import MockConnection
+from beer.ingest.name_map import NameMap
+import pandas as pd
 
 
-def test_get_value_then_save():
-    mock_conn = MockConnection()
+def test_get_value_then_get_table():
+    empty_df = pd.DataFrame(columns=['name_id', 'tanczos_name'])
 
-    p = KeyMap(mock_conn, 'names')
+    p = NameMap(empty_df)
     assert p.get_value('beer') == 1
     assert p.get_value('grog') == 2
 
-    p.save_new_keys()
+    df = p.get_new_names()
+    assert len(df) == 2
 
-    mock_cursor = mock_conn.cursor()
-
-    assert len(mock_cursor.commands) == 2
+    assert all(df['tanczos_name'].isin(['beer', 'grog']))
+    assert all(df['name_id'].isin([1, 2]))
 
 
 def test_get_value_and_save_intertwined():
-    mock_conn = MockConnection()
+    empty_df = pd.DataFrame(columns=['name_id', 'tanczos_name'])
 
-    p = KeyMap(mock_conn, 'names')
+    p = NameMap(empty_df)
     assert p.get_value('beer') == 1
 
-    p.save_new_keys()
+    df = p.get_new_names()
+    assert len(df) == 1
 
-    mock_cursor = mock_conn.cursor()
-
-    assert len(mock_cursor.commands) == 1
-    assert 'beer' in mock_cursor.commands[0]
+    assert all(df['tanczos_name'].isin(['beer']))
+    assert all(df['name_id'].isin([1]))
 
     assert p.get_value('grog') == 2
 
-    p.save_new_keys()
-    assert len(mock_cursor.commands) == 2
-    assert 'grog' in mock_cursor.commands[-1]
+    df = p.get_new_names()
+    assert len(df) == 1
+
+    assert all(df['tanczos_name'].isin(['grog']))
+    assert all(df['name_id'].isin([2]))
+
+
+def test_existing_values_respected():
+    pre_existing = pd.DataFrame(data={'name_id': [1, 2], 'tanczos_name': ['beer', 'grog']})
+    p = NameMap(pre_existing)
+    assert p.get_value('beer') == 1
+    assert p.get_value('grog') == 2
+
+    assert p.get_value('cider') == 3
+
+    df = p.get_new_names()
+    assert len(df) == 1
+
+    assert all(df['tanczos_name'].isin(['cider']))
+    assert all(df['name_id'].isin([3]))

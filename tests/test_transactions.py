@@ -1,10 +1,11 @@
 import pandas as pd
 import io
-from beer.ingest.transactions import compute_transactions, update_inventory
+from beer.ingest.transactions import compute_transactions
 
 
 first_timestamp = "2017-11-30 18:43:47"
 second_timestamp = "2017-11-30 19:03:35"
+
 
 class InventoryDataframe:
 
@@ -164,49 +165,16 @@ def assert_inventory_is(inventory, product_id, quantity, price, timestamp):
     assert row['timestamp'] == pd.to_datetime(timestamp)
 
 
-def test_new_inventory_replaces_old():
-
-    first_idf = InventoryDataframe()
-    first_idf.add(product_id=1, quantity=5.0, price=1.99, timestamp=first_timestamp)
-    first = first_idf.get_dataframe()
-
-    second_idf = InventoryDataframe()
-    second_idf.add(product_id=1, quantity=5.0, price=1.99, timestamp=second_timestamp)
-    second = second_idf.get_dataframe()
-
-    result = update_inventory(first, second)
-
-    assert_inventory_is(result, product_id=1, quantity=5.0, price=1.99, timestamp=second_timestamp)
-
-
-def test_new_inventory_has_extra():
-    first_idf = InventoryDataframe()
-    first_idf.add(product_id=1, quantity=5.0, price=1.99, timestamp=first_timestamp)
-    first = first_idf.get_dataframe()
-
-    second_idf = InventoryDataframe()
-    second_idf.add(product_id=1, quantity=5.0, price=1.99, timestamp=second_timestamp)
-    second_idf.add(product_id=2, quantity=3.0, price=2.99, timestamp=second_timestamp)
-    second = second_idf.get_dataframe()
-
-    result = update_inventory(first, second)
-
-    assert_inventory_is(result, product_id=1, quantity=5.0, price=1.99, timestamp=second_timestamp)
-    assert_inventory_is(result, product_id=2, quantity=3.0, price=2.99, timestamp=second_timestamp)
-
-
-def test_old_inventory_has_extra():
+def test_no_transactions_with_same_first_and_second():
     first_idf = InventoryDataframe()
     first_idf.add(product_id=1, quantity=5.0, price=1.99, timestamp=first_timestamp)
     first_idf.add(product_id=2, quantity=34.0, price=59.99, timestamp=first_timestamp)
     first = first_idf.get_dataframe()
 
     second_idf = InventoryDataframe()
-    second_idf.add(product_id=1, quantity=5.0, price=1.99, timestamp=second_timestamp)
+    second_idf.add(product_id=1, quantity=5.0, price=1.99, timestamp=first_timestamp)
+    second_idf.add(product_id=2, quantity=34.0, price=59.99, timestamp=first_timestamp)
     second = second_idf.get_dataframe()
 
-    result = update_inventory(first, second)
-
-    assert_inventory_is(result, product_id=1, quantity=5.0, price=1.99, timestamp=second_timestamp)
-    assert_inventory_is(result, product_id=2, quantity=34.0, price=59.99, timestamp=first_timestamp)
-
+    result = compute_transactions(first, second)
+    assert len(result) is 0
