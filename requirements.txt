@@ -3,4 +3,3 @@ python-dotenv
 pytest
 pytest_mock
 pandas
-sqlalchemy
