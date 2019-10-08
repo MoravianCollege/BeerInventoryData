@@ -99,7 +99,11 @@ class DBSetup:
         self.cur.execute(create_inventory)
         self.cur.execute(create_transactions)
         self.cur.execute(create_current_inventory)
-        
+
+    def create_indexes(self):
+
+        self.cur.execute('CREATE INDEX inventory_timestamp_index ON inventory(timestamp);')
+
     def commit(self):
         """
         Commit changes and close the connection
@@ -122,4 +126,5 @@ if __name__ == '__main__':
 
     dbs.remove_tables_if_present()
     dbs.create_tables()
+    dbs.create_indexes()
     dbs.commit()
