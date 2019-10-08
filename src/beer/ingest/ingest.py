@@ -214,6 +214,8 @@ if __name__ == '__main__':
     import sys
     import dotenv
     import os
+    import time
+    import datetime
 
     if len(sys.argv) != 2:
         print('Provide path to CSV files')
@@ -235,11 +237,24 @@ if __name__ == '__main__':
     count = 0
     total = len(files)
 
+    start = time.time()
+
     for file in files:
         if not file.endswith('csv'):
             continue
-        print('{}/{} ({}) {}'.format(count + 1, total, count/total, file))
         count += 1
+
+        print('{}/{} ({:.2%}) {}'.format(count, total, count/total, file))
+
+        current = time.time()
+        elapsed = current - start
+        percent_remaining = 1 - count / total
+        remaining = elapsed * total / count - elapsed
+        average = elapsed / count
+        eta = start + elapsed * total / count
+        print('Remaining: {}     ETA: {}   Average Time Per File: {:.2}' \
+              .format(datetime.timedelta(seconds=int(remaining)), datetime.datetime.fromtimestamp(eta).strftime("%H:%M:%S"), average))
+
         i.ingest(path + '/' + file)
 
 
