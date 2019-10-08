@@ -20,7 +20,6 @@ class MockDBTransactions:
         pass
 
     def get_inventory(self, timestamp):
-        # This will fail if it is ever used because the method is supposed
-        # to return a dataframe.
-        pass
+        columns = ['inventory_id', 'product_id', 'quantity', 'retail', 'case_retail', 'timestamp']
+        return pd.DataFrame(columns=columns)
 
