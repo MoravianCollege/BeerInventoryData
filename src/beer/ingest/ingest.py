@@ -70,9 +70,9 @@ class Ingest:
         # as a float, and writing to the DB will fail.
         data['case_pack'] = data['case_pack'].astype(int)
         # Remove fractional part from timestamp
-        data['timestamp'] = data['timestamp'].apply(lambda x: x.split('.')[0])
+        data['timestamp'] = pd.DataFrame(data['timestamp'].str.split('.').values.tolist()).iloc[:, 0]
         # Remove commas from the name
-        data['name'] = data['name'].apply(lambda x: x.replace(',', ''))
+        data['name'] = data['name'].str.replace(',', '')
 
         # Remove rows that duplicate the quantity and prices
         data.drop_duplicates(subset=['name', 'size', 'category', 'case_pack', 'quantity', 'retail', 'case_retail'], inplace=True)
@@ -83,8 +83,62 @@ class Ingest:
         # Update the current inventory in CSV format
         data = self.current_csv_inventory.update_inventory(data)
         # Split the size column into the quantity, volume, and type of container
-        data[['container_quantity', 'container_volume', 'container_type']] = data['size'].apply(
-            lambda x: pd.Series(parse_size(x)))
+        keg_re = r'(\d/\d).*KEG.*'
+
+        def keg_match(m):
+            size = m.group(1)
+            return '1,{} keg,keg'.format(size)
+
+        metric_keg_re = r'(\d+)\s+(LITER|LTR|OZ).*KEG.*'
+
+        def metric_keg_match(m):
+            size = m.group(1)
+            return '1,{} liter keg,keg'.format(size)
+
+        growler_re = r'32/64 OZ GROWLER'
+
+        def growler_match(m):
+            return '1,32 or 64 oz growler,growler'
+
+        containers = {'KEG': 'keg', 'BTL': 'bottle', 'CAN': 'can', 'ALUM': 'can', 'POUCH': 'pouch',
+                      "GROWLER": 'growler',
+                      'BAG': 'bag', 'JAR': 'jar', 'PLASTIC': 'plastic', 'SLUSHEE': 'slushee', 'HOT CIDER': 'hot cider',
+                      'NR': 'bottle'}
+        units = {'OZ': 'oz', 'LITER': 'liter', 'LTR': 'liter', 'ML': 'ml'}
+        containers_re = '|'.join(containers.keys())
+        units_re = '|'.join(units.keys())
+
+        group_re = r'(\d+)/(\d+(.\d+)?)\s+({})\s+({}).*'.format(units_re, containers_re)
+
+        def group_match(m):
+            quantity = int(m.group(1))
+            size = m.group(2)
+            unit = units[m.group(4)]
+            container = containers[m.group(5)]
+            return '{},{} {},{}'.format(quantity, size, unit, container)
+
+        single_re = r'(\d+(.\d+)?)\s+({})\s+({}).*'.format(units_re, containers_re)
+
+        def single_match(m):
+            size = m.group(1)
+            unit = units[m.group(3)]
+            container = containers[m.group(4)]
+            return '1,{} {},{}'.format(size, unit, container)
+
+        each_re = r'EACH'
+
+        data[['container_quantity', 'container_volume', 'container_type']] = \
+            pd.DataFrame(
+                data['size'].str.replace(keg_re, keg_match) \
+                             .str.replace(metric_keg_re, metric_keg_match) \
+                             .str.replace(growler_re, growler_match) \
+                             .str.replace(group_re, group_match) \
+                             .str.replace(single_re, single_match) \
+                             .str.replace(each_re, '1, each, each') \
+                             .str.split(',') \
+                             .values.tolist()
+            )
+
         # Apply the name map
         data['name_id'] = data['name'].apply(lambda x: self.names.get_value(x))
         # The product_id is computed using multiple values from a row.  axis=1 tells Pandas to
@@ -187,3 +241,20 @@ if __name__ == '__main__':
         print('{}/{} ({}) {}'.format(count + 1, total, count/total, file))
         count += 1
         i.ingest(path + '/' + file)
+
+
+def profile_code():
+
+    import cProfile
+    from pstats import SortKey
+    from beer.mocks.mock_database_transactions import MockDBTransactions
+
+    dbt = MockDBTransactions([[], [], [], []])
+    i = Ingest(dbt)
+
+    filename = '~/smalldata/2017-11-30_18:43:47.476167.csv'
+
+    cProfile.run('i.ingest(filename)', sort=SortKey.TIME)
+
+    import sys
+    sys.exit(0)
