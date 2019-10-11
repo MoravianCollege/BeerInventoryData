@@ -103,7 +103,7 @@ class Ingest:
         containers = {'KEG': 'keg', 'BTL': 'bottle', 'CAN': 'can', 'ALUM': 'can', 'POUCH': 'pouch',
                       "GROWLER": 'growler',
                       'BAG': 'bag', 'JAR': 'jar', 'PLASTIC': 'plastic', 'SLUSHEE': 'slushee', 'HOT CIDER': 'hot cider',
-                      'NR': 'bottle'}
+                      'NR': 'bottle', 'COMBO': 'combo'}
         units = {'OZ': 'oz', 'LITER': 'liter', 'LTR': 'liter', 'ML': 'ml'}
         containers_re = '|'.join(containers.keys())
         units_re = '|'.join(units.keys())
