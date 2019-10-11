@@ -216,6 +216,7 @@ if __name__ == '__main__':
     import os
     import time
     import datetime
+    import pandas as pd
 
     if len(sys.argv) != 2:
         print('Provide path to CSV files')
@@ -237,6 +238,8 @@ if __name__ == '__main__':
     count = 0
     total = len(files)
 
+    timestamps = database_transactions.get_timestamps()
+
     start = time.time()
 
     for file in files:
@@ -245,6 +248,20 @@ if __name__ == '__main__':
         count += 1
 
         print('{}/{} ({:.2%}) {}'.format(count, total, count/total, file))
+
+        # filenames are either in the form 2018-12-02_13:51:37.662314.csv or
+        # 20190727T085045.csv.  In either case, we want what is before the first
+        # period
+        timestamp_str = file.split('.')[0]
+        timestamp_str = timestamp_str.replace('_', ' ')
+        timestamp = pd.to_datetime(timestamp_str)
+
+        if timestamps['timestamp'].isin([timestamp]).any():
+            print('File already processed. Skipping...')
+            continue
+        else:
+            print('Fail {}'.format(timestamp))
+            sys.exit(0)
 
         current = time.time()
         elapsed = current - start
