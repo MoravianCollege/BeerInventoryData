@@ -260,6 +260,7 @@ if __name__ == '__main__':
             print('File already processed. Skipping...')
             # remove from count for correct statistics
             total -= 1
+            count -= 1
             # create new start time because we haven't done any work yet
             start = time.time()
             continue
