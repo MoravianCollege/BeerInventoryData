@@ -258,6 +258,8 @@ if __name__ == '__main__':
 
         if timestamps['timestamp'].isin([timestamp]).any():
             print('File already processed. Skipping...')
+            # remove from count for correct statistics
+            count -= 1
             continue
 
         current = time.time()
