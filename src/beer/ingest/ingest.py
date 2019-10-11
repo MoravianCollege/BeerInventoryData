@@ -134,7 +134,7 @@ class Ingest:
                              .str.replace(growler_re, growler_match) \
                              .str.replace(group_re, group_match) \
                              .str.replace(single_re, single_match) \
-                             .str.replace(each_re, '1, each, each') \
+                             .str.replace(each_re, '1,each,each') \
                              .str.split(',') \
                              .values.tolist()
             )
