@@ -259,9 +259,6 @@ if __name__ == '__main__':
         if timestamps['timestamp'].isin([timestamp]).any():
             print('File already processed. Skipping...')
             continue
-        else:
-            print('Fail {}'.format(timestamp))
-            sys.exit(0)
 
         current = time.time()
         elapsed = current - start
