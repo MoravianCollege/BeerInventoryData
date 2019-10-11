@@ -58,3 +58,10 @@ class DBTransactions:
         query_str = "SELECT * FROM inventory WHERE timestamp='{}'".format(timestamp)
         return pd.read_sql_query(query_str, con=self.conn)
 
+    def get_timestamps(self):
+        """
+        Get all the timestamps in the timestamps table
+        :return: a DataFrame of
+        """
+        query_str = "SELECT * FROM timestamps"
+        return pd.read_sql_query(query_str, con=self.conn)
